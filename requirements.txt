@@ -1,0 +1,6 @@
+gym
+torch
+scipy
+numpy
+tensorflow==1.13.1
+matplotlib
