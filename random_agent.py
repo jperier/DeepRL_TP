@@ -3,6 +3,7 @@ import sys
 
 import gym
 from gym import wrappers, logger
+import matplotlib.pyplot as plt
 
 class RandomAgent(object):
     """The world's simplest agent!"""
@@ -36,17 +37,26 @@ if __name__ == '__main__':
     reward = 0
     done = False
 
+    rewards = []
+
     for i in range(episode_count):
         ob = env.reset()
+        count = 0
+        summ = 0
         while True:
             action = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
-
+            count += 1
+            summ += reward
             if done:
+                rewards.append(summ)
                 break
             # Note there's no env.render() here. But the environment still can open window and
             # render if asked by env.monitor: it calls env.render('rgb_array') to record video.
             # Video is not recorded every episode, see capped_cubic_video_schedule for details.
+
+    plt.plot(rewards)
+    plt.show()
 
     # Close the env and write monitor result info to disk
     env.close()
