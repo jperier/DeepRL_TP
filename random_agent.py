@@ -5,13 +5,24 @@ import gym
 from gym import wrappers, logger
 import matplotlib.pyplot as plt
 
+BUFFER_SIZE = 100000
+
+
 class RandomAgent(object):
     """The world's simplest agent!"""
+
     def __init__(self, action_space):
         self.action_space = action_space
+        self.buffer = []
+        self.index = 0
 
     def act(self, observation, reward, done):
         return self.action_space.sample()
+
+    def memorize(self, interaction):
+        self.buffer[self.index] = interaction
+        self.index = (self.index + 1) % BUFFER_SIZE
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
@@ -44,8 +55,13 @@ if __name__ == '__main__':
         count = 0
         summ = 0
         while True:
+            last_state = ob
             action = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
+
+            interaction = [last_state, action, ob, reward, done]
+            agent.memorize(interaction)
+
             count += 1
             summ += reward
             if done:
