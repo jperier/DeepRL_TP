@@ -31,6 +31,14 @@ class RandomAgent(object):
             return []
 
 
+class NeuralNetwork:
+    def __init__(self):
+        self.n = 2 # FIXME
+
+    def forward(self, state):
+        return 42
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('env_id', nargs='?', default='CartPole-v1', help='Select the environment to run')
