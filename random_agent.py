@@ -21,8 +21,12 @@ class RandomAgent(object):
         return self.action_space.sample()
 
     def memorize(self, interaction):
-        self.buffer[self.index] = interaction
-        self.index = (self.index + 1) % BUFFER_SIZE
+        if len(self.buffer) < BUFFER_SIZE:
+            self.buffer.append(interaction)
+        else:
+            self.buffer[self.index] = interaction
+            self.index = (self.index + 1) % BUFFER_SIZE
+        assert len(self.buffer) <= BUFFER_SIZE
 
     def getBatch(self, size=100, repeated=False):
         if len(self.buffer) > 0:
