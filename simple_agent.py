@@ -1,4 +1,5 @@
 import argparse
+import os
 import random
 from collections import OrderedDict
 import sys
@@ -30,17 +31,19 @@ def boltzmann_exploration(q_values, action_space):
 class SimpleAgent(object):
     """The world's simplest agent!"""
 
-    def __init__(self, observation_space, action_space, model):
+    def __init__(self, observation_space, action_space, model, gamma=0.02, epsilon=0.1):
         self.action_space = action_space
         self.buffer = []
         self.index = 0
         self.model = model
+        self.gamma = gamma
+        self.epsilon = epsilon
 
     def act(self, observation, reward, done):
         q_valeurs = model.forward(observation)
 
         # greedy
-        if random.random() < 0.1:
+        if random.random() < self.epsilon:
             return self.action_space.sample()
 
         return int(torch.argmax(q_valeurs))
@@ -59,15 +62,39 @@ class SimpleAgent(object):
         else:
             return []
 
-    # interaction = [last_state, action, new_state, reward, done]
-    def learn(self):
+    def train(self):
         batch = self.get_batch()
-        for interaction in batch:
-            y = model.forward(interaction[0])
-            # model.backward(y, label)
+        for state, action, reward, next_state, done in batch:
+            target = reward  # if done
+            if not done:
+                target = (reward + self.gamma * torch.max(self.model.forward(next_state)))
+            target_f = self.model.forward(state)
+            target_f[action] = target
 
-    def bellman(self):
-        bouh = 42
+            output = self.model.forward(state)
+            self.model.backward(output, target_f)
+
+    def save(self, path="/tmp", epoch=1):
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.model.optimizer.state_dict(),
+            'loss': self.model.criterion
+        }, path)
+
+    # def load(self):
+    #     model = NeuralNetwork(*args, **kwargs)
+    #     optimizer = TheOptimizerClass(*args, **kwargs)
+    #
+    #     checkpoint = torch.load(PATH)
+    #     model.load_state_dict(checkpoint['model_state_dict'])
+    #     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    #     epoch = checkpoint['epoch']
+    #     loss = checkpoint['loss']
+    #
+    #     model.eval()
+    #     # - or -
+    #     model.train()
 
 
 class NeuralNetwork(nn.Module):
@@ -140,6 +167,8 @@ if __name__ == '__main__':
     # will be namespaced). You can also dump to a tempdir if you'd
     # like: tempfile.mkdtemp().
     outdir = './tmp/simple-agent-results'
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     env = wrappers.Monitor(env, directory=outdir, force=True)
     env.seed(0)
 
@@ -150,8 +179,9 @@ if __name__ == '__main__':
 
     model = NeuralNetwork(input_dim, env.action_space.n)
     agent = SimpleAgent(env.observation_space, env.action_space, model)
+    batch_size = 32
 
-    episode_count = 100
+    episode_count = 1000
     reward = 0
     done = False
 
@@ -161,22 +191,31 @@ if __name__ == '__main__':
         ob = env.reset()
         count = 0
         summ = 0
-        while True:
+        while not done:
             last_state = ob
             action = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
 
-            interaction = [last_state, action, ob, reward, done]
+            interaction = (last_state, action, ob, reward, done)
             agent.memorize(interaction)
 
-            count += 1
             summ += reward
             if done:
-                rewards.append(summ)
-                break
-            # Note there's no env.render() here. But the environment still can open window and
-            # render if asked by env.monitor: it calls env.render('rgb_array') to record video.
-            # Video is not recorded every episode, see capped_cubic_video_schedule for details.
+                print("episode: {}/{}, score: {}, e: {:.2}".format(i+1, episode_count, count, agent.epsilon))
+
+            count += 1
+            agent.train()
+            # if len(agent.buffer) > batch_size:
+            #     agent.train()
+            # else:
+            #     print(f"Agent can't learn, buffer size={len(agent.buffer)}")
+            # if i % 50 == 0:
+            #     agent.save(path=outdir + "weights_"
+            #                + '{:04d}'.format(i) + ".hdf5")
+        rewards.append(summ)
+        # Note there's no env.render() here. But the environment still can open window and
+        # render if asked by env.monitor: it calls env.render('rgb_array') to record video.
+        # Video is not recorded every episode, see capped_cubic_video_schedule for details.
 
     plt.plot(rewards)
     plt.show()
