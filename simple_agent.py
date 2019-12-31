@@ -31,7 +31,7 @@ def boltzmann_exploration(q_values, action_space):
 class SimpleAgent(object):
     """The world's simplest agent!"""
 
-    def __init__(self, observation_space, action_space, model, gamma=0.02, epsilon=0.1):
+    def __init__(self, observation_space, action_space, model, gamma=0.95, epsilon=0.1):
         self.action_space = action_space
         self.buffer = []
         self.index = 0
@@ -136,6 +136,7 @@ class NeuralNetwork(nn.Module):
             layers.append((f"linear{nb_hidden_layers-1}", nn.Linear(self.hidden_layer_size, output_dim)))
 
         self.layers = nn.Sequential(OrderedDict(layers))
+        print("Model created: ", self.layers)
 
     def forward(self, x):
         x = torch.tensor(x).float()
@@ -181,17 +182,20 @@ if __name__ == '__main__':
     agent = SimpleAgent(env.observation_space, env.action_space, model)
     batch_size = 32
 
-    episode_count = 1000
+    episode_count = 100
     reward = 0
-    done = False
 
     rewards = []
 
     for i in range(episode_count):
+        # if i % 50 == 0:
+        #     print(f"Starting episode {i+1}/{episode_count}")
         ob = env.reset()
+        done = False
         count = 0
         summ = 0
         while not done:
+            # env.render()
             last_state = ob
             action = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
@@ -217,6 +221,7 @@ if __name__ == '__main__':
         # render if asked by env.monitor: it calls env.render('rgb_array') to record video.
         # Video is not recorded every episode, see capped_cubic_video_schedule for details.
 
+    print(rewards)
     plt.plot(rewards)
     plt.show()
 
