@@ -1,5 +1,6 @@
 import argparse
 import random
+from collections import OrderedDict
 import sys
 
 import torch
@@ -75,9 +76,11 @@ class NeuralNetwork(nn.Module):
         super(NeuralNetwork, self).__init__()
         self.layers = []
         self.hidden_layer_size = hidden_layer_size if hidden_layer_size else int((input_dim + output_dim) / 2)
+        self._create_network_(nb_hidden_layers, output_dim)
         self.criterion = loss_function()
         self.optimizer = optimizer(self.parameters(), lr=learning_rate)
 
+    def _create_network_old_(self, nb_hidden_layers, output_dim):
         # Creating layers
         if nb_hidden_layers == 0:
             self.layers.append(nn.Linear(input_dim, output_dim))
@@ -89,6 +92,23 @@ class NeuralNetwork(nn.Module):
                 self.layers.append(nn.Linear(self.hidden_layer_size, self.hidden_layer_size))
             # Output layer
             self.layers.append(nn.Linear(self.hidden_layer_size, output_dim))
+
+    def _create_network_(self, nb_hidden_layers, output_dim):
+        layers = []
+        if nb_hidden_layers == 0:
+            layers.append(('linear', nn.Linear(input_dim, output_dim)))
+        else:
+            # First hidden layer
+            layers.append(('linear1', nn.Linear(input_dim, self.hidden_layer_size)))
+            layers.append(("leaky_relu1", nn.LeakyReLU()))
+            # Other hidden layers
+            for i in range(1, nb_hidden_layers - 1):
+                layers.append((f"linear{i}", nn.Linear(self.hidden_layer_size, self.hidden_layer_size)))
+                layers.append((f"leaky_relu{i}", nn.LeakyReLU()))
+            # Output layer
+            layers.append((f"linear{nb_hidden_layers-1}", nn.Linear(self.hidden_layer_size, output_dim)))
+
+        self.layers = nn.Sequential(OrderedDict(layers))
 
     def forward(self, x):
         x = torch.tensor(x).float()
