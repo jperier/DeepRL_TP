@@ -5,12 +5,25 @@ import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import optim
 
 import gym
 from gym import wrappers, logger
 import matplotlib.pyplot as plt
 
 BUFFER_SIZE = 100000
+
+
+def greedy_exploration(q_values, action_space):
+    if random.random() < 0.1:
+        return action_space.sample()
+
+    return int(torch.argmax(q_values))
+
+
+def boltzmann_exploration(q_values, action_space):
+    i = 42
+    # TODO
 
 
 class SimpleAgent(object):
@@ -23,7 +36,7 @@ class SimpleAgent(object):
         self.model = model
 
     def act(self, observation, reward, done):
-        q_valeurs = model(observation)
+        q_valeurs = model.forward(observation)
 
         # greedy
         if random.random() < 0.1:
@@ -39,18 +52,31 @@ class SimpleAgent(object):
             self.index = (self.index + 1) % BUFFER_SIZE
         assert len(self.buffer) <= BUFFER_SIZE
 
-    def getBatch(self, size=100, repeated=False):
+    def get_batch(self, size=100, repeated=False):
         if len(self.buffer) >= size:
             return random.choices(self.buffer, k=size) if repeated else random.sample(self.buffer, size)
         else:
             return []
 
+    # interaction = [last_state, action, new_state, reward, done]
+    def learn(self):
+        batch = self.get_batch()
+        for interaction in batch:
+            y = model.forward(interaction[0])
+            # model.backward(y, label)
+
+    def bellman(self):
+        bouh = 42
+
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_dim, output_dim, nb_hidden_layers=1, hidden_layer_size=None):
+    def __init__(self, input_dim, output_dim, nb_hidden_layers=1, hidden_layer_size=None, learning_rate=1e-3,
+                 loss_function=nn.MSELoss, optimizer=optim.SGD):
         super(NeuralNetwork, self).__init__()
         self.layers = []
-        self.hidden_layer_size = hidden_layer_size if hidden_layer_size else int((input_dim+output_dim)/2)
+        self.hidden_layer_size = hidden_layer_size if hidden_layer_size else int((input_dim + output_dim) / 2)
+        self.criterion = loss_function()
+        self.optimizer = optimizer(self.parameters(), lr=learning_rate)
 
         # Creating layers
         if nb_hidden_layers == 0:
@@ -59,7 +85,7 @@ class NeuralNetwork(nn.Module):
             # First hidden layer
             self.layers.append(nn.Linear(input_dim, self.hidden_layer_size))
             # Other hidden layers
-            for i in range(1, nb_hidden_layers-1):
+            for i in range(1, nb_hidden_layers - 1):
                 self.layers.append(nn.Linear(self.hidden_layer_size, self.hidden_layer_size))
             # Output layer
             self.layers.append(nn.Linear(self.hidden_layer_size, output_dim))
@@ -70,6 +96,12 @@ class NeuralNetwork(nn.Module):
             x = F.leaky_relu(layer(x))
         # Last Layer without relu
         return self.layers[-1](x)
+
+    def backward(self, output, target):
+        self.optimizer.zero_grad()  # zero the gradient buffers
+        loss = self.criterion(output, target)
+        loss.backward()
+        self.optimizer.step()
 
 
 if __name__ == '__main__':
@@ -87,7 +119,7 @@ if __name__ == '__main__':
     # directory, including one with existing data -- all monitor files
     # will be namespaced). You can also dump to a tempdir if you'd
     # like: tempfile.mkdtemp().
-    outdir = './tmp/random-agent-results'
+    outdir = './tmp/simple-agent-results'
     env = wrappers.Monitor(env, directory=outdir, force=True)
     env.seed(0)
 
