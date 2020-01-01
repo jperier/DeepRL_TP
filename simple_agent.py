@@ -12,18 +12,6 @@ from agents import SimpleAgent, SimpleAgentStabilized
 from networks import NeuralNetwork
 
 
-def greedy_exploration(q_values, action_space):
-    if random.random() < 0.1:
-        return action_space.sample()
-
-    return int(torch.argmax(q_values))
-
-
-def boltzmann_exploration(q_values, action_space):
-    i = 42
-    # TODO
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('env_id', nargs='?', default='CartPole-v1', help='Select the environment to run')
@@ -56,7 +44,7 @@ if __name__ == '__main__':
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
     batch_size = 42
 
-    episode_count = 1000
+    episode_count = 10000
     reward = 0
     TARGET_UPDATE = 10
 
@@ -72,19 +60,21 @@ if __name__ == '__main__':
         while not done:
             # env.render()
             last_state = ob
-            action, epsilon = agent.act(ob, reward, done)
+            action = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
 
             interaction = (last_state, action, ob, reward, done)
             agent.memorize(interaction)
 
             summ += reward
-            if done:
-                print(f"episode: {i+1}/{episode_count}, score: {count}, epsilon: {epsilon}")
+            if done and i % 100 == 0:
+                epsilon = agent.get_epsilon()
+                print(f"episode: {i+1}/{episode_count}, score: {count}, epsilon: {epsilon:.2}")
 
             count += 1
-            if len(agent.buffer) > batch_size:
-                agent.train()
+        if len(agent.buffer) > batch_size:
+            agent.train()
+
             # if i % 50 == 0:
             #     agent.save(path=outdir + "weights_"
             #                + '{:04d}'.format(i) + ".hdf5")

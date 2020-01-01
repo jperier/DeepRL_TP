@@ -7,7 +7,7 @@ BUFFER_SIZE = 100000
 
 
 class GreedyExploration:
-    def __init__(self, epsilon=1.0, epsilon_min=0.01, epsilon_decay=0.99):
+    def __init__(self, epsilon=1.0, epsilon_min=0.001, epsilon_decay=0.999):
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_decay
@@ -65,6 +65,9 @@ class SimpleAgent(object):
             target_f[action] = target
             self.fit_model(state, target_f)
         self.exploration.update()
+
+    def get_epsilon(self):
+        return self.exploration.epsilon
 
     def target_q_values(self, next_state):
         return self.model.forward(next_state)
