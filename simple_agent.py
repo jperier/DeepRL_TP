@@ -1,8 +1,5 @@
 import argparse
 import os
-import random
-
-import torch
 
 import gym
 from gym import wrappers, logger
@@ -18,6 +15,7 @@ def train(env, agent, epochs=1000, target_update=10, batch_size=50):
     for epoch in range(epochs):
 
         rewards_sum = play_with_env(env, agent)
+
         rewards.append(rewards_sum)
         eps = agent.get_epsilon()
         epsilons.append(eps)
@@ -62,11 +60,7 @@ def plot_rewards(rewards):
     plt.show()
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('env_id', nargs='?', default='CartPole-v1', help='Select the environment to run')
-    args = parser.parse_args()
-
+def do(args):
     # You can set the level to logger.DEBUG or logger.WARN if you
     # want to change the amount of output.
     logger.set_level(logger.INFO)
@@ -88,6 +82,11 @@ if __name__ == '__main__':
     for d in env.observation_space.shape:
         input_dim *= d
 
+    def create_wrapper():
+        def wrapper(x):
+            return x
+        return wrapper
+
     def create_model():
         return NeuralNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
@@ -96,3 +95,10 @@ if __name__ == '__main__':
 
     # Close the env and write monitor result info to disk
     env.close()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=None)
+    parser.add_argument('env_id', nargs='?', default='CartPole-v1', help='Select the environment to run')
+    args = parser.parse_args()
+    do(args)
