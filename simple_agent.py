@@ -12,6 +12,56 @@ from agents import SimpleAgent, SimpleAgentStabilized
 from networks import NeuralNetwork
 
 
+def train(env, agent, epochs=1000, target_update=10, batch_size=50):
+    rewards = []
+    epsilons = []
+    for epoch in range(epochs):
+
+        rewards_sum = play_with_env(env, agent)
+        rewards.append(rewards_sum)
+        eps = agent.get_epsilon()
+        epsilons.append(eps)
+
+        if epoch % 100 == 0:
+            print(f"episode: {epoch + 1}/{epochs}, score: {rewards_sum}, epsilon: {eps:.2}")
+        if len(agent.buffer) > batch_size:
+            agent.train()
+        if epoch % target_update == 0 and isinstance(agent, SimpleAgentStabilized):
+            agent.update_target_network()
+
+    plot_rewards(rewards)
+
+
+def play_with_env(env, agent):
+    state = env.reset()
+    done = False
+    count = 0
+    rewards_sum = 0
+    reward = 0
+
+    while not done:
+        last_state = state
+        action = agent.act(state, reward, done)
+        state, reward, done, _ = env.step(action)
+
+        interaction = (last_state, action, state, reward, done)
+        agent.memorize(interaction)
+
+        rewards_sum += reward
+        if not done:
+            count += 1
+
+    return rewards_sum
+
+
+def plot_rewards(rewards):
+    # plt.set_xlabel("Itérations")
+    # plt.set_ylabel("Somme des récompenses")
+    # plt.set_title("Evolution des récompenses")
+    plt.plot(rewards)
+    plt.show()
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('env_id', nargs='?', default='CartPole-v1', help='Select the environment to run')
@@ -40,53 +90,9 @@ if __name__ == '__main__':
 
     def create_model():
         return NeuralNetwork(input_dim, env.action_space.n)
-    # model = NeuralNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
-    batch_size = 42
 
-    episode_count = 10000
-    reward = 0
-    TARGET_UPDATE = 10
-
-    rewards = []
-
-    for i in range(episode_count):
-        # if i % 50 == 0:
-        #     print(f"Starting episode {i+1}/{episode_count}")
-        ob = env.reset()
-        done = False
-        count = 0
-        summ = 0
-        while not done:
-            # env.render()
-            last_state = ob
-            action = agent.act(ob, reward, done)
-            ob, reward, done, _ = env.step(action)
-
-            interaction = (last_state, action, ob, reward, done)
-            agent.memorize(interaction)
-
-            summ += reward
-            if done and i % 100 == 0:
-                epsilon = agent.get_epsilon()
-                print(f"episode: {i+1}/{episode_count}, score: {count}, epsilon: {epsilon:.2}")
-
-            count += 1
-        if len(agent.buffer) > batch_size:
-            agent.train()
-
-            # if i % 50 == 0:
-            #     agent.save(path=outdir + "weights_"
-            #                + '{:04d}'.format(i) + ".hdf5")
-        rewards.append(summ)
-        if i % TARGET_UPDATE == 0 and isinstance(agent, SimpleAgentStabilized):
-            agent.update_target_network()
-        # Note there's no env.render() here. But the environment still can open window and
-        # render if asked by env.monitor: it calls env.render('rgb_array') to record video.
-        # Video is not recorded every episode, see capped_cubic_video_schedule for details.
-
-    plt.plot(rewards)
-    plt.show()
+    train(env, agent, epochs=10, target_update=50)
 
     # Close the env and write monitor result info to disk
     env.close()
