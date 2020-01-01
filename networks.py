@@ -41,3 +41,6 @@ class NeuralNetwork(nn.Module):
         loss = self.criterion(output, target)
         loss.backward()
         self.optimizer.step()
+
+    def clone_from(self, network):
+        self.load_state_dict(network.state_dict())

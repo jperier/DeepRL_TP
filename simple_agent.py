@@ -8,7 +8,7 @@ import gym
 from gym import wrappers, logger
 import matplotlib.pyplot as plt
 
-from agents import SimpleAgent
+from agents import SimpleAgent, SimpleAgentStabilized
 from networks import NeuralNetwork
 
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     outdir = './tmp/simple-agent-results'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    env = wrappers.Monitor(env, directory=outdir, force=True)
+    env = wrappers.Monitor(env, directory=outdir, force=True, video_callable=False)
     env.seed(0)
 
     # Calculating input space size
@@ -50,12 +50,15 @@ if __name__ == '__main__':
     for d in env.observation_space.shape:
         input_dim *= d
 
-    model = NeuralNetwork(input_dim, env.action_space.n)
-    agent = SimpleAgent(env.observation_space, env.action_space, model)
+    def create_model():
+        return NeuralNetwork(input_dim, env.action_space.n)
+    # model = NeuralNetwork(input_dim, env.action_space.n)
+    agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
     batch_size = 42
 
-    episode_count = 100
+    episode_count = 1000
     reward = 0
+    TARGET_UPDATE = 10
 
     rewards = []
 
@@ -69,7 +72,7 @@ if __name__ == '__main__':
         while not done:
             # env.render()
             last_state = ob
-            action = agent.act(ob, reward, done)
+            action, epsilon = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
 
             interaction = (last_state, action, ob, reward, done)
@@ -77,7 +80,7 @@ if __name__ == '__main__':
 
             summ += reward
             if done:
-                print(f"episode: {i+1}/{episode_count}, score: {count}")
+                print(f"episode: {i+1}/{episode_count}, score: {count}, epsilon: {epsilon}")
 
             count += 1
             if len(agent.buffer) > batch_size:
@@ -86,6 +89,8 @@ if __name__ == '__main__':
             #     agent.save(path=outdir + "weights_"
             #                + '{:04d}'.format(i) + ".hdf5")
         rewards.append(summ)
+        if i % TARGET_UPDATE == 0 and isinstance(agent, SimpleAgentStabilized):
+            agent.update_target_network()
         # Note there's no env.render() here. But the environment still can open window and
         # render if asked by env.monitor: it calls env.render('rgb_array') to record video.
         # Video is not recorded every episode, see capped_cubic_video_schedule for details.

@@ -6,26 +6,32 @@ import torch
 BUFFER_SIZE = 100000
 
 
-def create_greedy_exploration(epsilon=0.1):
-    def greedy_exploration(q_values, action_space):
-        if random.random() < epsilon:
-            return action_space.sample()
-        return int(torch.argmax(q_values))
+class GreedyExploration:
+    def __init__(self, epsilon=1.0, epsilon_min=0.01, epsilon_decay=0.99):
+        self.epsilon = epsilon
+        self.epsilon_min = epsilon_min
+        self.epsilon_decay = epsilon_decay
 
-    return greedy_exploration
+    def __call__(self, q_values, action_space):
+        return action_space.sample() if random.random() < self.epsilon else int(torch.argmax(q_values))
+
+    def update(self):
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
 
 
-default_exploration = create_greedy_exploration()
+default_exploration = GreedyExploration()
 
 
 class SimpleAgent(object):
     """The world's simplest agent!"""
 
-    def __init__(self, observation_space, action_space, model, gamma=0.95, exploration=default_exploration):
+    def __init__(self, observation_space, action_space, create_model_function, gamma=0.95,
+                 exploration=default_exploration):
         self.action_space = action_space
         self.buffer = []
         self.index = 0
-        self.model = model
+        self.model = create_model_function()
         self.gamma = gamma
         self.exploration = exploration
 
@@ -54,15 +60,18 @@ class SimpleAgent(object):
         for state, action, next_state, reward, done in batch:
             target = reward  # if done
             if not done:
-                # print(batch)
-                # print(torch.tensor(next_state).float().shape)
-                # print(state, action, reward, next_state, done)
-                target = (reward + self.gamma * torch.max(self.model.forward(next_state)))
+                target = (reward + self.gamma * torch.max(self.target_q_values(next_state)))
             target_f = self.model.forward(state)
             target_f[action] = target
+            self.fit_model(state, target_f)
+        self.exploration.update()
 
-            output = self.model.forward(state)
-            self.model.backward(output, target_f)
+    def target_q_values(self, next_state):
+        return self.model.forward(next_state)
+
+    def fit_model(self, state, target_f):
+        output = self.model.forward(state)
+        self.model.backward(output, target_f)
 
     def save(self, path="/tmp", epoch=1):
         torch.save({
@@ -85,3 +94,18 @@ class SimpleAgent(object):
     #     model.eval()
     #     # - or -
     #     model.train()
+
+
+class SimpleAgentStabilized(SimpleAgent):
+
+    def __init__(self, observation_space, action_space, create_model_function, gamma=0.95, exploration=default_exploration):
+        super().__init__(observation_space, action_space, create_model_function, gamma=0.95, exploration=default_exploration)
+        self.target_net = create_model_function()
+        self.update_target_network()
+        self.target_net.eval()
+
+    def update_target_network(self):
+        self.target_net.clone_from(self.model)
+
+    def target_q_values(self, next_state):
+        return self.target_net.forward(next_state)
