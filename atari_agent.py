@@ -20,9 +20,15 @@ def do(args):
     # will be namespaced). You can also dump to a tempdir if you'd
     # like: tempfile.mkdtemp().
     outdir = out_dir('./tmp/atari-agent-results')
+
+    # FIXME Inverse AtariPreprocessing and FrameStack ?
+    """ 
+    If FrameStack simply do env.step() 4 times and AtariPreprocessing skip 4 frames each times,
+     we may be skipping more frames than we want, an I right ?
+    """
     env = wrappers.AtariPreprocessing(env, screen_size=84, frame_skip=4, grayscale_obs=True)
-    env = wrappers.FlattenObservation(env)
-    env = wrappers.Monitor(env, directory=outdir, force=True)
+    env = wrappers.FrameStack(env, 4)
+    env = wrappers.Monitor(env, directory=outdir, force=True, video_callable=False)
     env.seed(0)
 
     # Calculating input space size
@@ -37,7 +43,7 @@ def do(args):
         return ConvolutionalNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
 
-    train(env, agent, epochs=10, target_update=50, render_env=True)
+    train(env, agent, epochs=10, target_update=50, render_env=False)
 
     # Close the env and write monitor result info to disk
     env.close()
