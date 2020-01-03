@@ -33,7 +33,8 @@ def play_with_env(env, agent, render=False):
     reward = 0
 
     while not done:
-        env.render()
+        if render:
+            env.render()
         last_state = state
         action = agent.act(state, reward, done)
         state, reward, done, _ = env.step(action)
