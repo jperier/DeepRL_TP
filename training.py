@@ -22,7 +22,7 @@ def train(env, agent, epochs=1000, target_update=10, batch_size=50, render_env=F
         if epoch % target_update == 0 and isinstance(agent, SimpleAgentStabilized):
             agent.update_target_network()
 
-    plot_rewards(rewards)
+    plot_rewards(rewards, epochs, target_update)
 
 
 def play_with_env(env, agent, render=False):
@@ -49,10 +49,13 @@ def play_with_env(env, agent, render=False):
     return rewards_sum
 
 
-def plot_rewards(rewards):
-    # plt.set_xlabel("Itérations")
-    # plt.set_ylabel("Somme des récompenses")
-    # plt.set_title("Evolution des récompenses")
+def plot_rewards(rewards, nb_epoch=None, target_update=None):
+    title = "Evolution des récompenses"
+    if nb_epoch: title += f', nb_epoch={nb_epoch}'
+    if target_update: title += f', target_update={target_update}'
+    plt.xlabel("Itérations")
+    plt.ylabel("Somme des récompenses")
+    plt.title(title)
     plt.plot(rewards)
     plt.show()
 

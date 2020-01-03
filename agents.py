@@ -70,7 +70,7 @@ class SimpleAgent(object):
         return self.exploration.epsilon
 
     def target_q_values(self, next_state):
-        return self.model.forward(next_state)
+        return self.model.forward_no_grad(next_state)
 
     def fit_model(self, state, target_f):
         output = self.model.forward(state)
@@ -111,4 +111,4 @@ class SimpleAgentStabilized(SimpleAgent):
         self.target_net.clone_from(self.model)
 
     def target_q_values(self, next_state):
-        return self.target_net.forward(next_state)
+        return self.target_net.forward_no_grad(next_state)

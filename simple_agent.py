@@ -32,7 +32,7 @@ def do(args):
         return NeuralNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
 
-    train(env, agent, epochs=10, target_update=50)
+    train(env, agent, epochs=20000, target_update=500)
 
     # Close the env and write monitor result info to disk
     env.close()
