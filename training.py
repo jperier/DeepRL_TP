@@ -4,7 +4,7 @@ from agents import SimpleAgentStabilized
 import matplotlib.pyplot as plt
 
 
-def train(env, agent, epochs=1000, target_update=10, batch_size=50, render_env=False):
+def train(env, agent, epochs=1000, target_update=10, batch_size=50, render_env=False, batch_training=True):
     rewards = []
     epsilons = []
     for epoch in range(epochs):
@@ -18,7 +18,7 @@ def train(env, agent, epochs=1000, target_update=10, batch_size=50, render_env=F
         if epoch % 100 == 0:
             print(f"episode: {epoch + 1}/{epochs}, score: {rewards_sum}, epsilon: {eps:.2}")
         if len(agent.buffer) > batch_size:
-            agent.train()
+            agent.train(batch_training=batch_training)
         if epoch % target_update == 0 and isinstance(agent, SimpleAgentStabilized):
             agent.update_target_network()
 

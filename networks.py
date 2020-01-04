@@ -83,7 +83,9 @@ class ConvolutionalNetwork(nn.Module):
     def forward(self, x):
         x = torch.tensor(x).float()
         #print('in', x.shape)
+        to_squeeze = False
         if len(x.shape) == 3:
+            to_squeeze = True
             x = x.unsqueeze(0)  # adding the batch dim
         #print('post unsqueeze', x.shape)
         x = self.conv1(x)
@@ -100,7 +102,11 @@ class ConvolutionalNetwork(nn.Module):
         x = self.fc1(x)
         x = F.leaky_relu(x)
         x = self.fc2(x)
-        return x.squeeze(0)
+        # we remove the batch dim if we were given only one instance
+        if to_squeeze:
+            return x.squeeze(0)
+        else:
+            return x
 
     def forward_no_grad(self, x):
         with torch.no_grad():

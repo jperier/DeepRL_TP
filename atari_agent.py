@@ -7,6 +7,7 @@ from agents import SimpleAgentStabilized
 from networks import ConvolutionalNetwork
 from training import train, out_dir
 
+from time import time
 
 def do(args):
     # You can set the level to logger.DEBUG or logger.WARN if you
@@ -46,8 +47,10 @@ def do(args):
         return ConvolutionalNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
 
-    train(env, agent, epochs=1, target_update=1000, render_env=False)
-
+    start = time()
+    train(env, agent, epochs=100, target_update=5, render_env=False)
+    end = time()
+    print("Training time:", end-start)
     agent.save()
 
     # Close the env and write monitor result info to disk

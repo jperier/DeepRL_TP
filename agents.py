@@ -65,29 +65,34 @@ class SimpleAgent(object):
         else:
             return []
 
-    def train(self, batch_size=32):
+    def train(self, batch_size=32, batch_training=True):
         if not self._eval:
             batch = self.get_batch(size=batch_size)
             if len(batch) == 0:
                 return None
-            for state, action, next_state, reward, done in batch:
-                target = reward  # if done
-                if not done:
-                    target = (reward + self.gamma * torch.max(self.target_q_values(next_state)))
-                target_f = self.model.forward(state)
-                target_f[action] = target
-                self.fit_model(state, target_f)
-            self.exploration.update()
 
-        # # début de code pour utiliser des batchs durant l'apprentissage
-        # states, actions, next_states, rewards, dones = map(torch.tensor, zip(*batch))
-        # # efficace si on est pas souvent done
-        # targets = (rewards + self.gamma * torch.max(self.target_q_values(next_states)))
-        # targets = torch.where(dones, rewards, targets)
-        #
-        # targets_f = self.model.forward(states)
-        # targets_f[actions] = targets
-        # self.fit_model(states, targets_f)
+            if batch_training:
+                states, actions, next_states, rewards, dones = map(torch.tensor, zip(*batch))   # converting in tensors
+                # efficace si on est pas souvent done
+                targets = (rewards + self.gamma * torch.max(self.target_q_values(next_states)))
+                targets = torch.where(dones, rewards, targets)
+
+                actions = F.one_hot(actions, self.action_space.n)   # converting actions in one-hot
+                targets = targets.unsqueeze(1) * actions            # replacing ones in actions by the target value
+                targets_f = self.model.forward(states)              # computing current model predictions
+                targets_f = torch.where(actions == 1, targets, targets_f)   # replacing
+                self.fit_model(states, targets_f)
+
+            else:
+                for state, action, next_state, reward, done in batch:
+                    target = reward  # if done
+                    if not done:
+                        target = (reward + self.gamma * torch.max(self.target_q_values(next_state)))
+                    target_f = self.model.forward(state)
+                    target_f[action] = target
+                    self.fit_model(state, target_f)
+
+            self.exploration.update()
 
     def get_epsilon(self):
         return self.exploration.epsilon
