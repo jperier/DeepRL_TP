@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import optim
+from torch.optim.rmsprop import RMSprop
 
 
 class NeuralNetwork(nn.Module):
@@ -50,8 +50,8 @@ class NeuralNetwork(nn.Module):
 
 
 class ConvolutionalNetwork(nn.Module):
-    def __init__(self, input_dim, output_dim, nb_hidden_layers=1, hidden_layer_size=None, learning_rate=1e-3,
-                 loss_function=nn.MSELoss, optimizer=optim.SGD):
+    def __init__(self, input_dim, output_dim, nb_hidden_layers=1, hidden_layer_size=None,
+                 loss_function=nn.MSELoss):
         super(ConvolutionalNetwork, self).__init__()
 
         self.conv1 = nn.Conv2d(in_channels=4,
@@ -73,7 +73,11 @@ class ConvolutionalNetwork(nn.Module):
         self.fc2 = nn.Linear(512, output_dim)
 
         self.criterion = loss_function()
-        self.optimizer = optimizer(self.parameters(), lr=learning_rate)
+        self.optimizer = RMSprop(self.parameters(),
+                                 lr=2.5e-4,
+                                 alpha=0.95,
+                                 momentum=0.95,
+                                 eps=0.01)
 
     def forward(self, x):
         x = torch.tensor(x).float()

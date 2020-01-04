@@ -2,13 +2,13 @@ import random
 
 import torch
 
-BUFFER_SIZE = 100000
+BUFFER_SIZE = 1000000
 RAND_SEED = 42
 random.seed(RAND_SEED)
 
 
 class GreedyExploration:
-    def __init__(self, epsilon=1.0, epsilon_min=0.001, epsilon_decay=0.999):
+    def __init__(self, epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999999):
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_decay
@@ -27,7 +27,7 @@ default_exploration = GreedyExploration()
 class SimpleAgent(object):
     """The world's simplest agent!"""
 
-    def __init__(self, observation_space, action_space, create_model_function, gamma=0.95,
+    def __init__(self, observation_space, action_space, create_model_function, gamma=0.99,
                  exploration=default_exploration):
         self.action_space = action_space
         self.buffer = []
@@ -121,8 +121,8 @@ class SimpleAgent(object):
 
 class SimpleAgentStabilized(SimpleAgent):
 
-    def __init__(self, observation_space, action_space, create_model_function, gamma=0.95, exploration=default_exploration):
-        super().__init__(observation_space, action_space, create_model_function, gamma=0.95, exploration=default_exploration)
+    def __init__(self, observation_space, action_space, create_model_function, gamma=0.99, exploration=default_exploration):
+        super().__init__(observation_space, action_space, create_model_function, gamma, exploration)
         self.target_net = create_model_function()
         self.update_target_network()
         self.target_net.eval()
