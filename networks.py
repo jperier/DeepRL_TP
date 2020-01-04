@@ -55,19 +55,22 @@ class ConvolutionalNetwork(nn.Module):
         super(ConvolutionalNetwork, self).__init__()
 
         self.conv1 = nn.Conv2d(in_channels=4,
-                               out_channels=8,
-                               kernel_size=4,
-                               stride=2,
-                               padding=1)
-        # out_dim : 8x42x42
-        self.conv2 = nn.Conv2d(in_channels=8,
-                               out_channels=16,
-                               kernel_size=4,
-                               stride=2,
-                               padding=1)
-        # out_dim : 16x21x21
+                               out_channels=32,
+                               kernel_size=8,
+                               stride=4)
 
-        self.fc1 = nn.Linear((21 * 21 * 16), output_dim)
+        self.conv2 = nn.Conv2d(in_channels=32,
+                               out_channels=64,
+                               kernel_size=4,
+                               stride=2)
+
+        self.conv3 = nn.Conv2d(in_channels=64,
+                               out_channels=64,
+                               kernel_size=3,
+                               stride=1)
+
+        self.fc1 = nn.Linear(3136, 512)
+        self.fc2 = nn.Linear(512, output_dim)
 
         self.criterion = loss_function()
         self.optimizer = optimizer(self.parameters(), lr=learning_rate)
@@ -75,7 +78,8 @@ class ConvolutionalNetwork(nn.Module):
     def forward(self, x):
         x = torch.tensor(x).float()
         #print('in', x.shape)
-        x = x.unsqueeze(0)  # adding the batch dimXXXXXXXXXXXXXXXXXXXXXX
+        if len(x.shape) == 3:
+            x = x.unsqueeze(0)  # adding the batch dim
         #print('post unsqueeze', x.shape)
         x = self.conv1(x)
         #print('post conv1', x.shape)
@@ -83,10 +87,13 @@ class ConvolutionalNetwork(nn.Module):
         x = self.conv2(x)
         #print('post conv2', x.shape)
         x = F.leaky_relu(x)
-        x = torch.reshape(x, (1, -1))  # XXXXXXXXbatch
+        x = self.conv3(x)
+        #print('post conv3', x.shape)
+        x = F.leaky_relu(x)
+        x = torch.reshape(x, (x.shape[0], -1))  # flattening but keeping batch dim
         #print('post flatten', x.shape)
         x = self.fc1(x)
-        return torch.sigmoid(x)
+        return self.fc2(x)
 
     def forward_no_grad(self, x):
         with torch.no_grad():

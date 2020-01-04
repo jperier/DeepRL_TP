@@ -36,14 +36,17 @@ def do(args):
     for d in env.observation_space.shape:
         input_dim *= d
 
+    print("Observation space:")
     print(input_dim)
     print(env.observation_space.shape)
+    print("Action space:")
+    print(env.action_space)
 
     def create_model():
         return ConvolutionalNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
 
-    train(env, agent, epochs=10, target_update=50, render_env=False)
+    train(env, agent, epochs=10000, target_update=100, render_env=False)
 
     # Close the env and write monitor result info to disk
     env.close()
