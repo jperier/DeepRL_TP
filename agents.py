@@ -55,8 +55,10 @@ class SimpleAgent(object):
         else:
             return []
 
-    def train(self, batch_size=100):
+    def train(self, batch_size=32):
         batch = self.get_batch(size=batch_size)
+        if len(batch) == 0:
+            return None
         for state, action, next_state, reward, done in batch:
             target = reward  # if done
             if not done:
@@ -65,6 +67,16 @@ class SimpleAgent(object):
             target_f[action] = target
             self.fit_model(state, target_f)
         self.exploration.update()
+
+        # # début de code pour utiliser des batchs durant l'apprentissage
+        # states, actions, next_states, rewards, dones = map(torch.tensor, zip(*batch))
+        # # efficace si on est pas souvent done
+        # targets = (rewards + self.gamma * torch.max(self.target_q_values(next_states)))
+        # targets = torch.where(dones, rewards, targets)
+        #
+        # targets_f = self.model.forward(states)
+        # targets_f[actions] = targets
+        # self.fit_model(states, targets_f)
 
     def get_epsilon(self):
         return self.exploration.epsilon
