@@ -46,7 +46,9 @@ def do(args):
         return ConvolutionalNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
 
-    train(env, agent, epochs=100000, target_update=1000, render_env=False)
+    train(env, agent, epochs=1, target_update=1000, render_env=False)
+
+    agent.save()
 
     # Close the env and write monitor result info to disk
     env.close()

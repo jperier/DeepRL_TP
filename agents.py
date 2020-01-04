@@ -1,6 +1,8 @@
 import random
-
+from networks import *
 import torch
+
+from datetime import datetime
 
 BUFFER_SIZE = 1000000
 RAND_SEED = 42
@@ -29,6 +31,7 @@ class SimpleAgent(object):
 
     def __init__(self, observation_space, action_space, create_model_function, gamma=0.99,
                  exploration=default_exploration):
+        self.observation_space = observation_space
         self.action_space = action_space
         self.buffer = []
         self.index = 0
@@ -96,27 +99,39 @@ class SimpleAgent(object):
         output = self.model.forward(state)
         self.model.backward(output, target_f)
 
-    def save(self, path="/tmp", epoch=1):
+    def save(self, path="models/", epoch=1):
+        if type(self.model) == NeuralNetwork:
+            t = 'nn'
+        else:
+            t = 'conv'
+
+        path += 'model_save_' + str(datetime.now()).replace(':', '-').replace(' ', '_')
+
         torch.save({
+            'nn_type': t,
             'epoch': epoch,
             'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.model.optimizer.state_dict(),
-            'loss': self.model.criterion
-        }, path)
+            # 'optimizer_state_dict': self.model.optimizer.state_dict(),
+            # 'loss': self.model.criterion
+        },
+            path)
 
-    # def load(self):
-    #     model = NeuralNetwork(*args, **kwargs)
-    #     optimizer = TheOptimizerClass(*args, **kwargs)
-    #
-    #     checkpoint = torch.load(PATH)
-    #     model.load_state_dict(checkpoint['model_state_dict'])
-    #     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    #     epoch = checkpoint['epoch']
-    #     loss = checkpoint['loss']
-    #
-    #     model.eval()
-    #     # - or -
-    #     model.train()
+        print('Model saved in', path)
+        # return path
+
+    def load(self, path):
+        checkpoint = torch.load(path)
+
+        input_dim = 1
+        for d in self.observation_space.shape:
+            input_dim *= d
+
+        if checkpoint['nn_type'] == 'conv':
+            self.model = ConvolutionalNetwork(input_dim, self.action_space.n)
+
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        # self.model.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        print('model loaded, epoch:', checkpoint['epoch'])
 
 
 class SimpleAgentStabilized(SimpleAgent):
@@ -132,3 +147,7 @@ class SimpleAgentStabilized(SimpleAgent):
 
     def target_q_values(self, next_state):
         return self.target_net.forward_no_grad(next_state)
+
+    def load(self, path):
+        super().load(path)
+        self.update_target_network()

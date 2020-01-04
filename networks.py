@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import optim
 from torch.optim.rmsprop import RMSprop
 
 
@@ -97,7 +98,9 @@ class ConvolutionalNetwork(nn.Module):
         x = torch.reshape(x, (x.shape[0], -1))  # flattening but keeping batch dim
         #print('post flatten', x.shape)
         x = self.fc1(x)
-        return self.fc2(x)
+        x = F.leaky_relu(x)
+        x = self.fc2(x)
+        return x.squeeze(0)
 
     def forward_no_grad(self, x):
         with torch.no_grad():
