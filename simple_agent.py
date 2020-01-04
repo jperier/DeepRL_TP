@@ -3,7 +3,7 @@ import argparse
 import gym
 from gym import wrappers, logger
 
-from agents import SimpleAgent, SimpleAgentStabilized
+from agents import SimpleAgentStabilized
 from networks import NeuralNetwork
 from training import train, out_dir
 

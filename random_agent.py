@@ -1,12 +1,13 @@
 import argparse
 import random
-import sys
 
 import gym
 from gym import wrappers, logger
 import matplotlib.pyplot as plt
 
 BUFFER_SIZE = 100000
+RAND_SEED = 42
+random.seed(RAND_SEED)
 
 
 class RandomAgent(object):

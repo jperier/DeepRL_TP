@@ -1,9 +1,10 @@
 import random
-from collections import OrderedDict
 
 import torch
 
 BUFFER_SIZE = 100000
+RAND_SEED = 42
+random.seed(RAND_SEED)
 
 
 class GreedyExploration:

@@ -4,7 +4,7 @@ import gym
 from gym import logger, wrappers
 
 from agents import SimpleAgentStabilized
-from networks import NeuralNetwork, ConvolutionalNetwork
+from networks import ConvolutionalNetwork
 from training import train, out_dir
 
 
