@@ -47,6 +47,8 @@ class SimpleAgent(object):
         self._eval = noTraining
 
     def memorize(self, interaction):
+        if self._eval:
+            return None
         if len(self.buffer) < BUFFER_SIZE:
             self.buffer.append(interaction)
         else:
