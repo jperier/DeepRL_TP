@@ -35,12 +35,16 @@ class SimpleAgent(object):
         self.model = create_model_function()
         self.gamma = gamma
         self.exploration = exploration
+        self._eval = False
 
     def act(self, observation, reward, done):
         q_valeurs = self.model.forward(observation)
 
         # greedy
         return self.exploration(q_valeurs, self.action_space)
+
+    def eval(self, noTraining=True):  # Remove agent ability to learn
+        self._eval = noTraining
 
     def memorize(self, interaction):
         if len(self.buffer) < BUFFER_SIZE:
@@ -57,17 +61,18 @@ class SimpleAgent(object):
             return []
 
     def train(self, batch_size=32):
-        batch = self.get_batch(size=batch_size)
-        if len(batch) == 0:
-            return None
-        for state, action, next_state, reward, done in batch:
-            target = reward  # if done
-            if not done:
-                target = (reward + self.gamma * torch.max(self.target_q_values(next_state)))
-            target_f = self.model.forward(state)
-            target_f[action] = target
-            self.fit_model(state, target_f)
-        self.exploration.update()
+        if not self._eval:
+            batch = self.get_batch(size=batch_size)
+            if len(batch) == 0:
+                return None
+            for state, action, next_state, reward, done in batch:
+                target = reward  # if done
+                if not done:
+                    target = (reward + self.gamma * torch.max(self.target_q_values(next_state)))
+                target_f = self.model.forward(state)
+                target_f[action] = target
+                self.fit_model(state, target_f)
+            self.exploration.update()
 
         # # début de code pour utiliser des batchs durant l'apprentissage
         # states, actions, next_states, rewards, dones = map(torch.tensor, zip(*batch))
