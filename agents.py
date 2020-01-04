@@ -30,18 +30,21 @@ class SimpleAgent(object):
     """The world's simplest agent!"""
 
     def __init__(self, observation_space, action_space, create_model_function, gamma=0.99,
-                 exploration=default_exploration):
+                 exploration=default_exploration, device=torch.device('cpu')):
         self.observation_space = observation_space
         self.action_space = action_space
         self.buffer = []
         self.index = 0
-        self.model = create_model_function()
+        self.model = create_model_function().to(device)
         self.gamma = gamma
         self.exploration = exploration
         self._eval = False
+        # CUDA
+        self.device = device
 
     def act(self, observation, reward, done):
-        q_valeurs = self.model.forward(observation)
+
+        q_valeurs = self.model.forward(torch.tensor(observation).float().to(self.device))
 
         # greedy
         return self.exploration(q_valeurs, self.action_space)
@@ -61,7 +64,8 @@ class SimpleAgent(object):
 
     def get_batch(self, size=100, repeated=False):
         if len(self.buffer) >= size:
-            return random.choices(self.buffer, k=size) if repeated else random.sample(self.buffer, size)
+            r = random.choices(self.buffer, k=size) if repeated else random.sample(self.buffer, size)
+            return r
         else:
             return []
 
@@ -72,14 +76,15 @@ class SimpleAgent(object):
                 return None
 
             if batch_training:
-                states, actions, next_states, rewards, dones = map(torch.tensor, zip(*batch))   # converting in tensors
+                states, actions, next_states, rewards, dones = \
+                    map(lambda x: x.to(self.device), map(torch.tensor, zip(*batch)))   # converting in tensors
                 # efficace si on est pas souvent done
                 targets = (rewards + self.gamma * torch.max(self.target_q_values(next_states)))
                 targets = torch.where(dones, rewards, targets)
 
                 actions = F.one_hot(actions, self.action_space.n)   # converting actions in one-hot
                 targets = targets.unsqueeze(1) * actions            # replacing ones in actions by the target value
-                targets_f = self.model.forward(states)              # computing current model predictions
+                targets_f = self.model.forward(states.to(self.device))              # computing current model predictions
                 targets_f = torch.where(actions == 1, targets, targets_f)   # replacing
                 self.fit_model(states, targets_f)
 
@@ -141,9 +146,10 @@ class SimpleAgent(object):
 
 class SimpleAgentStabilized(SimpleAgent):
 
-    def __init__(self, observation_space, action_space, create_model_function, gamma=0.99, exploration=default_exploration):
-        super().__init__(observation_space, action_space, create_model_function, gamma, exploration)
-        self.target_net = create_model_function()
+    def __init__(self, observation_space, action_space, create_model_function, gamma=0.99,
+                 exploration=default_exploration, device=torch.device('cpu')):
+        super().__init__(observation_space, action_space, create_model_function, gamma, exploration, device)
+        self.target_net = create_model_function().to(self.device)
         self.update_target_network()
         self.target_net.eval()
 

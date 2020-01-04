@@ -3,6 +3,8 @@ import argparse
 import gym
 from gym import logger, wrappers
 
+import torch
+
 from agents import SimpleAgentStabilized
 from networks import ConvolutionalNetwork
 from training import train, out_dir
@@ -43,9 +45,16 @@ def do(args):
     print("Action space:")
     print(env.action_space)
 
+    # CUDA
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        print('Using CUDA device:', device)
+    else:
+        device = torch.device('cpu')
+
     def create_model():
         return ConvolutionalNetwork(input_dim, env.action_space.n)
-    agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
+    agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)#, device=device)
 
     start = time()
     train(env, agent, epochs=100, target_update=5, render_env=False)
