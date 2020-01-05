@@ -143,8 +143,12 @@ class SimpleAgent(object):
             self.model = NeuralNetwork(input_dim, self.action_space.n)
 
         self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.post_load()
         # self.model.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         print('model loaded, epoch:', checkpoint['epoch'])
+
+    def post_load(self):
+        i = 42  # Do nothing
 
 
 class SimpleAgentStabilized(SimpleAgent):
@@ -164,4 +168,7 @@ class SimpleAgentStabilized(SimpleAgent):
 
     def load(self, path):
         super().load(path)
+        self.update_target_network()
+
+    def post_load(self):
         self.update_target_network()
