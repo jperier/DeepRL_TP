@@ -3,7 +3,7 @@ import argparse
 import gym
 from gym import wrappers, logger
 
-from agents import SimpleAgentStabilized
+from agents import SimpleAgentStabilized, GreedyExploration
 from networks import NeuralNetwork
 from training import train, out_dir
 
@@ -30,10 +30,13 @@ def do(args):
 
     def create_model():
         return NeuralNetwork(input_dim, env.action_space.n)
-    agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model)
+    agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model,
+                                  exploration=GreedyExploration(1.0, 0.001, 0.999))
 
-    train(env, agent, epochs=20000, target_update=500)
+    epochs = 10000
+    train(env, agent, epochs=epochs, target_update=50, batch_training=False)
 
+    agent.save(epoch=epochs)
     # Close the env and write monitor result info to disk
     env.close()
 

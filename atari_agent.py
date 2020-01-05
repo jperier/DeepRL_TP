@@ -56,7 +56,10 @@ def do(args):
         return ConvolutionalNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model, device=device)
 
-    epochs = 5000
+    # load
+    agent.load('models/model_save_PE_10h')
+
+    epochs = 1000
     start = time()
     train(env, agent, epochs=epochs, target_update=250, render_env=False)
     end = time()

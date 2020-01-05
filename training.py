@@ -10,7 +10,6 @@ def train(env, agent, epochs=1000, target_update=10, batch_size=32, render_env=F
     for epoch in range(epochs):
 
         rewards_sum = play_with_env(env, agent, render=render_env)
-
         rewards.append(rewards_sum)
         eps = agent.get_epsilon()
         epsilons.append(eps)

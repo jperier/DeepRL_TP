@@ -138,9 +138,9 @@ class SimpleAgent(object):
             input_dim *= d
 
         if checkpoint['nn_type'] == 'conv':
-            self.model = ConvolutionalNetwork(input_dim, self.action_space.n)
+            self.model = ConvolutionalNetwork(input_dim, self.action_space.n).to(self.device)
         elif checkpoint['nn_type'] == 'nn':
-            self.model = NeuralNetwork(input_dim, self.action_space.n)
+            self.model = NeuralNetwork(input_dim, self.action_space.n).to(self.device)
 
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.post_load()
