@@ -74,11 +74,13 @@ class ConvolutionalNetwork(nn.Module):
         self.fc2 = nn.Linear(512, output_dim)
 
         self.criterion = loss_function()
-        self.optimizer = RMSprop(self.parameters(),
-                                 lr=2.5e-4,
-                                 alpha=0.95,
-                                 momentum=0.95,
-                                 eps=0.01)
+        self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
+        #self.optimizer = optim.SGD(self.parameters())
+        #self.optimizer = RMSprop(self.parameters(),
+        #                         lr=2.5e-4,
+        #                         alpha=0.95,
+        #                         momentum=0.95,
+        #                         eps=0.01)
 
     def forward(self, x):
         x = torch.tensor(x).float()

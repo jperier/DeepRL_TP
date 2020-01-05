@@ -58,7 +58,7 @@ def do(args):
 
     epochs = 5000
     start = time()
-    train(env, agent, epochs=epochs, target_update=500, render_env=False)
+    train(env, agent, epochs=epochs, target_update=250, render_env=False)
     end = time()
     print("Training time:", end-start)
     agent.save(epoch=epochs)
