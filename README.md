@@ -3,7 +3,7 @@ _Perier-Camby Julien_
 
 # DeepRL_TP
 
-##Installation de l'environnement
+## Installation de l'environnement
 
 Ce projet a été réalisé avec un environnement virtuel d'Anaconda 3, 
 nous allons donc utiliser tant le gestionnaire de paquet `conda` 
