@@ -1,7 +1,0 @@
-gym
-git
-# gym[atari]
-pytorch
-scipy
-numpy
-matplotlib

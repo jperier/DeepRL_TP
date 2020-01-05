@@ -1,7 +1,5 @@
 gym
-git+https://github.com/Kojoley/atari-py.git
 gym[atari]
-torch
 scipy
 numpy
 matplotlib
