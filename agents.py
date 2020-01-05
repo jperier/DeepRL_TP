@@ -1,6 +1,7 @@
 import random
 from networks import *
 import torch
+import torch.nn.functional as F
 
 from datetime import datetime
 
@@ -10,7 +11,7 @@ random.seed(RAND_SEED)
 
 
 class GreedyExploration:
-    def __init__(self, epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999999):
+    def __init__(self, epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999):
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_decay
