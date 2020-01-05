@@ -102,7 +102,7 @@ def train_often(env, agent, epochs=1000, target_update=10, batch_size=32, render
         eps = agent.get_epsilon()
         epsilons.append(eps)
 
-        if epoch % 100 == 0:
+        if epoch % 1 == 0:
             print(f"episode: {epoch + 1}/{epochs}, score: {rewards_sum}, epsilon: {eps:.2}, {frames} frames done")
         # if len(agent.buffer) > batch_size:
         #     agent.train(batch_training=batch_training)
