@@ -1,3 +1,6 @@
+_Thiboud Pierre-Elliott_  
+_Perier-Camby Julien_
+
 # DeepRL_TP
 
 ##Installation de l'environnement
