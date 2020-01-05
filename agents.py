@@ -11,7 +11,7 @@ random.seed(RAND_SEED)
 
 
 class GreedyExploration:
-    def __init__(self, epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.9995):
+    def __init__(self, epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.99988):
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_decay
