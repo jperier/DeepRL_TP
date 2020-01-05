@@ -139,6 +139,8 @@ class SimpleAgent(object):
 
         if checkpoint['nn_type'] == 'conv':
             self.model = ConvolutionalNetwork(input_dim, self.action_space.n)
+        elif checkpoint['nn_type'] == 'nn':
+            self.model = NeuralNetwork(input_dim, self.action_space.n)
 
         self.model.load_state_dict(checkpoint['model_state_dict'])
         # self.model.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
