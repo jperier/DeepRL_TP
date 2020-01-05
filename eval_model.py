@@ -44,7 +44,7 @@ def do(env_id):
         agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model, device=device)
 
         # load
-        agent.load('models/model_save_PE_10h')
+        agent.load('models/atari')
         agent.eval()
         eval(env, agent, 5)
 
