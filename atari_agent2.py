@@ -56,9 +56,9 @@ def do(args):
         return ConvolutionalNetwork(input_dim, env.action_space.n)
     agent = SimpleAgentStabilized(env.observation_space, env.action_space, create_model, device=device)
 
-    epochs = 10
+    epochs = 100
     start = time()
-    train_often(env, agent, epochs=epochs, target_update=10, render_env=False)
+    train_often(env, agent, epochs=epochs, target_update=100, render_env=False)
     end = time()
     print("Training time:", end-start)
     agent.save(epoch=epochs, path="models-atari2/")

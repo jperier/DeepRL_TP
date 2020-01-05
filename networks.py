@@ -74,9 +74,9 @@ class ConvolutionalNetwork(nn.Module):
         self.fc2 = nn.Linear(512, output_dim)
 
         self.criterion = loss_function()
-        self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
-        #self.optimizer = optim.SGD(self.parameters())
-        #self.optimizer = RMSprop(self.parameters(),
+        # self.optimizer = optim.Adam(self.parameters(), lr=5e-4)
+        self.optimizer = optim.SGD(self.parameters(), lr=1e-2)
+        # self.optimizer = RMSprop(self.parameters(),
         #                         lr=2.5e-4,
         #                         alpha=0.95,
         #                         momentum=0.95,
